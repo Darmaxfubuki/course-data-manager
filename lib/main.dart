@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
-import 'screens/debugging_lab_page.dart';
+import 'screens/home_page.dart';
 import 'services/course_service.dart';
 
 const String studentName = 'I Ketut Darmawan Wirakusuma';
@@ -27,12 +27,12 @@ class CourseExplorerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Course Explorer - Tahap 15 Debugging',
+      title: 'Course Explorer v2',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1976D2)),
         useMaterial3: true,
       ),
-      home: const DebuggingLabPage(
+      home: const HomePage(
         studentName: studentName,
         studentId: studentId,
       ),

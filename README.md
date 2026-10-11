@@ -15,3 +15,42 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+# Course Explorer v2 - State Management & Architecture
+
+Proyek ini dibangun sebagai implementasi praktikum State Management dan Arsitektur Aplikasi Flutter menggunakan Provider Pattern, Repository Pattern, dan Service Layer.
+
+- **Nama Mahasiswa:** I Ketut Darmawan Wirakusuma
+- **NIM:** 2415051021
+
+---
+
+## 🏛️ Tanggung Jawab Struktur Folder (Architecture Audit)
+
+Arah dependensi yang diterapkan adalah satu arah:
+`Screens / Widgets` ➔ `Providers` ➔ `Repositories` ➔ `Services` ➔ `Models`
+
+1. **`lib/models/`**
+   - Bertanggung jawab mendefinisikan entitas data bertipe pasti (*strongly typed*), skema atribut model (`Course`), serta logika serialisasi dan deserialisasi data (`fromJson` / `toJson`).
+   - Tidak memiliki dependensi ke layer lain maupun Flutter UI.
+
+2. **`lib/services/`**
+   - Bertanggung jawab terhadap detail teknis pengambilan data mentah (*data source*), seperti membaca berkas aset JSON (`rootBundle`), decoding JSON, atau pemanggilan REST API eksternal.
+   - Tidak boleh memuat komponen UI/Widget.
+
+3. **`lib/repositories/`**
+   - Bertindak sebagai lapisan abstraksi antara data source dan state management.
+   - Mengisolasi perubahan sumber data (misal migrasi dari JSON lokal ke REST API) agar layer Provider dan UI tidak terdampak.
+
+4. **`lib/providers/`**
+   - Berfungsi sebagai pengelola status aplikasi (*state holder*) menggunakan `ChangeNotifier`.
+   - Mengatur siklus hidup *async state* (`isLoading`, `error`, `courses`) serta *application state* (`favorites`) sebagai *Single Source of Truth*.
+   - Tidak menyimpan referensi `BuildContext` sebagai state.
+
+5. **`lib/screens/`**
+   - Merepresentasikan antarmuka halaman penuh (`HomePage`, `CourseDetailPage`, `DebuggingLabPage`).
+   - Bertanggung jawab atas navigasi dan tata letak responsif (`NavigationBar` / `NavigationRail`).
+
+6. **`lib/widgets/`**
+   - Komponen UI modular yang dapat digunakan kembali (*reusable widgets*), seperti `CourseCard`.
+   - Menampilkan data dari model dan memicu aksi provider via `context.read()`.
