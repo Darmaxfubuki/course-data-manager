@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'course_provider.dart';
 import 'model/course.dart';
+import 'repositories/course_repository.dart';
 import 'services/course_service.dart';
 
 const String studentName = 'I Ketut Darmawan Wirakusuma';
@@ -16,44 +17,33 @@ class CourseExplorerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final courseService = CourseService();
+    final courseRepository = CourseRepository(courseService);
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Course Explorer - Tahap 9',
+      title: 'Course Explorer - Tahap 10',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1E88E5)),
         useMaterial3: true,
       ),
       home: ChangeNotifierProvider(
-        create: (_) => CourseProvider(),
-        child: const CourseServicePage(),
+        create: (_) => CourseProvider(repository: courseRepository),
+        child: const CourseRepositoryPage(),
       ),
     );
   }
 }
 
-class CourseServicePage extends StatefulWidget {
-  const CourseServicePage({super.key});
-
-  @override
-  State<CourseServicePage> createState() => _CourseServicePageState();
-}
-
-class _CourseServicePageState extends State<CourseServicePage> {
-  final CourseService _courseService = CourseService();
-  late Future<List<Course>> _coursesFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _coursesFuture = _courseService.loadCourses();
-  }
+class CourseRepositoryPage extends StatelessWidget {
+  const CourseRepositoryPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        title: const Text('Tahap 9: Service Layer'),
+        title: const Text('Tahap 10: Repository Pattern'),
         backgroundColor: const Color(0xFF1E88E5),
         foregroundColor: Colors.white,
         centerTitle: true,
@@ -62,7 +52,7 @@ class _CourseServicePageState extends State<CourseServicePage> {
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
-            // Card Identitas Mahasiswa
+            // Identitas Mahasiswa
             Card(
               elevation: 2,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -86,23 +76,23 @@ class _CourseServicePageState extends State<CourseServicePage> {
             ),
             const SizedBox(height: 16),
 
-            // Indikator Service Layer
+            // Indikator Repository Pattern
             Card(
-              color: Colors.green.shade50,
+              color: Colors.blue.shade50,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: Colors.green.shade300),
+                side: BorderSide(color: Colors.blue.shade300),
               ),
               child: const Padding(
                 padding: EdgeInsets.all(14.0),
                 child: Row(
                   children: [
-                    Icon(Icons.cloud_done_outlined, color: Colors.green, size: 28),
+                    Icon(Icons.layers_outlined, color: Color(0xFF1E88E5), size: 28),
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Data berhasil dimuat melalui CourseService (Pemisahan Data Source).',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.green),
+                        'Alur Data: UI -> Provider -> Repository -> Service berhasil terhubung.',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0D47A1)),
                       ),
                     ),
                   ],
@@ -112,14 +102,14 @@ class _CourseServicePageState extends State<CourseServicePage> {
             const SizedBox(height: 16),
 
             const Text(
-              'Daftar Kursus dari Service',
+              'Daftar Kursus via Repository Abstraction',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
 
-            // Render daftar kursus dari Future CourseService
+            // Membaca Future langsung dari Provider yang memanggil Repository
             FutureBuilder<List<Course>>(
-              future: _coursesFuture,
+              future: context.read<CourseProvider>().fetchCourses(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
@@ -132,11 +122,23 @@ class _CourseServicePageState extends State<CourseServicePage> {
 
                 if (snapshot.hasError) {
                   return Center(
-                    child: Text('Terjadi kesalahan: ${snapshot.error}'),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text('Terjadi kesalahan: ${snapshot.error}'),
+                    ),
                   );
                 }
 
                 final courses = snapshot.data ?? [];
+
+                if (courses.isEmpty) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text('Belum ada data kursus yang tersedia.'),
+                    ),
+                  );
+                }
 
                 return Column(
                   children: courses.map((course) {
