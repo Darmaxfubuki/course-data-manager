@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
-import '../model/course.dart';
+import '../models/course.dart';
 
 class CourseService {
   Future<List<Course>> loadCourses() async {
@@ -14,14 +14,13 @@ class CourseService {
           .map((e) => Course.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      // Fallback data jika file JSON belum terbaca
       return [
         Course(
           code: 'TI2101',
           title: 'State Management & Architecture',
           credits: 3,
           status: 'active',
-          description: 'Mempelajari service layer dan data source.',
+          description: 'Mempelajari Provider, Model, Service, dan Repository.',
         ),
         Course(
           code: 'TI2102',
