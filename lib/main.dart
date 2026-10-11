@@ -5,6 +5,35 @@ import 'course_provider.dart';
 const String studentName = 'I Ketut Darmawan Wirakusuma';
 const String studentId = '2415051021';
 
+// ==========================================
+// MODEL COURSE (Tahap 8)
+// ==========================================
+class Course {
+  final String code;
+  final String title;
+  final int credits;
+  final String status;
+  final String? description;
+
+  Course({
+    required this.code,
+    required this.title,
+    required this.credits,
+    required this.status,
+    this.description,
+  });
+
+  factory Course.fromJson(Map<String, dynamic> json) {
+    return Course(
+      code: json['code'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      credits: (json['credits'] as num?)?.toInt() ?? 0,
+      status: json['status'] as String? ?? 'planned',
+      description: json['description'] as String?,
+    );
+  }
+}
+
 void main() {
   runApp(const CourseExplorerApp());
 }
@@ -16,37 +45,57 @@ class CourseExplorerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Course Explorer - Tahap 7',
+      title: 'Course Explorer - Tahap 8',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1E88E5)),
         useMaterial3: true,
       ),
       home: ChangeNotifierProvider(
         create: (_) => CourseProvider(),
-        child: const WatchReadConsumerDemoPage(),
+        child: const CourseModelPage(),
       ),
     );
   }
 }
 
-class WatchReadConsumerDemoPage extends StatelessWidget {
-  const WatchReadConsumerDemoPage({super.key});
+class CourseModelPage extends StatelessWidget {
+  const CourseModelPage({super.key});
 
-  final List<Map<String, String>> _courses = const [
-    {'code': 'TI2101', 'title': 'State Management & Architecture'},
-    {'code': 'TI2102', 'title': 'Pemrograman Mobile Lanjut'},
-    {'code': 'TI2103', 'title': 'Git & Version Control'},
+  static const List<Map<String, dynamic>> _rawJsonData = [
+    {
+      'code': 'TI2101',
+      'title': 'State Management & Architecture',
+      'credits': 3,
+      'status': 'active',
+      'description': 'Membahas arsitektur Flutter dari setState hingga Provider.'
+    },
+    {
+      'code': 'TI2102',
+      'title': 'Pemrograman Mobile Lanjut',
+      'credits': 3,
+      'status': 'planned',
+      'description': 'Navigasi lanjutan, API REST, dan manajemen basis data.'
+    },
+    {
+      'code': 'TI2103',
+      'title': 'Git & Version Control',
+      'credits': 2,
+      'status': 'done',
+      'description': 'Manajemen branch, pull request, dan workflow kolaborasi.'
+    },
   ];
 
   @override
   Widget build(BuildContext context) {
-    // 1. Menggunakan context.watch() untuk mendengarkan perubahan state jumlah favorit
-    final int totalFavorites = context.watch<CourseProvider>().favoriteCount;
+    // Parsing JSON menjadi list object Course
+    final List<Course> courseList = _rawJsonData
+        .map((json) => Course.fromJson(json))
+        .toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        title: const Text('Tahap 7: watch, read & Consumer'),
+        title: const Text('Tahap 8: Model Course'),
         backgroundColor: const Color(0xFF1E88E5),
         foregroundColor: Colors.white,
         centerTitle: true,
@@ -79,29 +128,23 @@ class WatchReadConsumerDemoPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Demo 1: Menampilkan jumlah favorit menggunakan context.watch()
+            // Indikator Model Sukses
             Card(
-              color: Colors.blue.shade50,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.all(14.0),
+              color: Colors.green.shade50,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: Colors.green.shade300),
+              ),
+              child: const Padding(
+                padding: EdgeInsets.all(14.0),
                 child: Row(
                   children: [
-                    const Icon(Icons.remove_red_eye, color: Color(0xFF1E88E5), size: 28),
-                    const SizedBox(width: 12),
+                    Icon(Icons.check_circle_outline, color: Colors.green, size: 28),
+                    SizedBox(width: 12),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Dibaca via context.watch()',
-                            style: TextStyle(fontSize: 12, color: Colors.blueGrey, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            'Total Favorit: $totalFavorites Kursus',
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                        ],
+                      child: Text(
+                        'Data berhasil diparsing menjadi Object Model Course via Course.fromJson().',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.green),
                       ),
                     ),
                   ],
@@ -111,33 +154,45 @@ class WatchReadConsumerDemoPage extends StatelessWidget {
             const SizedBox(height: 16),
 
             const Text(
-              'Daftar Topik Kursus (read & Consumer)',
+              'Daftar Kursus (Strongly Typed Model)',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
 
-            ..._courses.map((course) {
-              final String code = course['code']!;
+            ...courseList.map((course) {
+              final bool isDone = course.status == 'done';
+              final bool isActive = course.status == 'active';
+              final Color statusColor = isDone
+                  ? Colors.green
+                  : (isActive ? const Color(0xFF1E88E5) : Colors.orange);
 
               return Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                margin: const EdgeInsets.only(bottom: 10),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 child: ListTile(
-                  leading: const Icon(Icons.school, color: Colors.blue),
-                  title: Text(course['title']!, style: const TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text(code),
-                  // 3. Menggunakan Consumer untuk membatasi rebuild hanya pada tombol ikon favorit
+                  leading: CircleAvatar(
+                    backgroundColor: statusColor.withOpacity(0.15),
+                    child: Icon(
+                      isDone ? Icons.check_circle : Icons.school,
+                      color: statusColor,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    course.title,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  subtitle: Text('${course.code} • ${course.credits} SKS • ${course.status}'),
                   trailing: Consumer<CourseProvider>(
                     builder: (context, provider, child) {
-                      final bool isFav = provider.isFavorite(code);
+                      final bool isFav = provider.isFavorite(course.code);
                       return IconButton(
                         icon: Icon(
                           isFav ? Icons.favorite : Icons.favorite_border,
                           color: isFav ? Colors.red : Colors.grey,
                         ),
-                        // 2. Menggunakan context.read() pada callback onPressed
                         onPressed: () {
-                          context.read<CourseProvider>().toggleFavorite(code);
+                          context.read<CourseProvider>().toggleFavorite(course.code);
                         },
                       );
                     },
