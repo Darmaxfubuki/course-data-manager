@@ -22,37 +22,48 @@ class CourseExplorerApp extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Course Explorer - Tahap 10',
+      title: 'Course Explorer - Tahap 11',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1E88E5)),
         useMaterial3: true,
       ),
       home: ChangeNotifierProvider(
-        create: (_) => CourseProvider(repository: courseRepository),
-        child: const CourseRepositoryPage(),
+        // Inisialisasi Provider dan langsung panggil loadCourses()
+        create: (_) => CourseProvider(courseRepository)..loadCourses(),
+        child: const CourseAsyncPage(),
       ),
     );
   }
 }
 
-class CourseRepositoryPage extends StatelessWidget {
-  const CourseRepositoryPage({super.key});
+class CourseAsyncPage extends StatelessWidget {
+  const CourseAsyncPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<CourseProvider>();
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        title: const Text('Tahap 10: Repository Pattern'),
+        title: const Text('Tahap 11: Async State'),
         backgroundColor: const Color(0xFF1E88E5),
         foregroundColor: Colors.white,
         centerTitle: true,
+        actions: [
+          // Tombol refresh untuk memicu reload state
+          IconButton(
+            tooltip: 'Reload Data',
+            icon: const Icon(Icons.refresh),
+            onPressed: () => context.read<CourseProvider>().loadCourses(),
+          ),
+        ],
       ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
-            // Identitas Mahasiswa
+            // Card Identitas Mahasiswa
             Card(
               elevation: 2,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -76,7 +87,7 @@ class CourseRepositoryPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Indikator Repository Pattern
+            // Indikator Async State
             Card(
               color: Colors.blue.shade50,
               shape: RoundedRectangleBorder(
@@ -87,11 +98,11 @@ class CourseRepositoryPage extends StatelessWidget {
                 padding: EdgeInsets.all(14.0),
                 child: Row(
                   children: [
-                    Icon(Icons.layers_outlined, color: Color(0xFF1E88E5), size: 28),
+                    Icon(Icons.sync, color: Color(0xFF1E88E5), size: 28),
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Alur Data: UI -> Provider -> Repository -> Service berhasil terhubung.',
+                        'Async State dikelola mandiri oleh CourseProvider (Loading, Error, Success).',
                         style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0D47A1)),
                       ),
                     ),
@@ -102,89 +113,101 @@ class CourseRepositoryPage extends StatelessWidget {
             const SizedBox(height: 16),
 
             const Text(
-              'Daftar Kursus via Repository Abstraction',
+              'Daftar Kursus (Async UI State)',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
 
-            // Membaca Future langsung dari Provider yang memanggil Repository
-            FutureBuilder<List<Course>>(
-              future: context.read<CourseProvider>().fetchCourses(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(24.0),
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
-                }
-
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text('Terjadi kesalahan: ${snapshot.error}'),
-                    ),
-                  );
-                }
-
-                final courses = snapshot.data ?? [];
-
-                if (courses.isEmpty) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text('Belum ada data kursus yang tersedia.'),
-                    ),
-                  );
-                }
-
-                return Column(
-                  children: courses.map((course) {
-                    final bool isDone = course.status == 'done';
-                    final bool isActive = course.status == 'active';
-                    final Color statusColor = isDone
-                        ? Colors.green
-                        : (isActive ? const Color(0xFF1E88E5) : Colors.orange);
-
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: statusColor.withOpacity(0.15),
-                          child: Icon(
-                            isDone ? Icons.check_circle : Icons.school,
-                            color: statusColor,
-                            size: 20,
-                          ),
-                        ),
-                        title: Text(
-                          course.title,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                        ),
-                        subtitle: Text('${course.code} • ${course.credits} SKS • ${course.status}'),
-                        trailing: Consumer<CourseProvider>(
-                          builder: (context, provider, child) {
-                            final bool isFav = provider.isFavorite(course.code);
-                            return IconButton(
-                              icon: Icon(
-                                isFav ? Icons.favorite : Icons.favorite_border,
-                                color: isFav ? Colors.red : Colors.grey,
-                              ),
-                              onPressed: () {
-                                context.read<CourseProvider>().toggleFavorite(course.code);
-                              },
-                            );
-                          },
-                        ),
+            // ========================================================
+            // PENANGANAN ASYNC STATE PADA UI (Poin 3, 4, dan 5)
+            // ========================================================
+            // 3. Tampilkan CircularProgressIndicator saat loading
+            if (provider.isLoading) ...[
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40.0),
+                  child: Column(
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 12),
+                      Text('Memuat data kursus...'),
+                    ],
+                  ),
+                ),
+              ),
+            ]
+            // 4. Tampilkan pesan jika terjadi error
+            else if (provider.error != null) ...[
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 30.0),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.red, size: 40),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Terjadi kesalahan: ${provider.error}',
+                        style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+                        textAlign: TextAlign.center,
                       ),
-                    );
-                  }).toList(),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: () => context.read<CourseProvider>().loadCourses(),
+                        child: const Text('Coba Lagi'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ]
+            // 5. Tampilkan daftar kartu jika data berhasil dimuat (Success)
+            else if (provider.courses.isEmpty) ...[
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24.0),
+                  child: Text('Tidak ada data kursus yang tersedia.'),
+                ),
+              ),
+            ] else ...[
+              ...provider.courses.map((course) {
+                final bool isDone = course.status == 'done';
+                final bool isActive = course.status == 'active';
+                final Color statusColor = isDone
+                    ? Colors.green
+                    : (isActive ? const Color(0xFF1E88E5) : Colors.orange);
+
+                final bool isFav = provider.isFavorite(course.code);
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: statusColor.withOpacity(0.15),
+                      child: Icon(
+                        isDone ? Icons.check_circle : Icons.school,
+                        color: statusColor,
+                        size: 20,
+                      ),
+                    ),
+                    title: Text(
+                      course.title,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    subtitle: Text('${course.code} • ${course.credits} SKS • ${course.status}'),
+                    trailing: IconButton(
+                      icon: Icon(
+                        isFav ? Icons.favorite : Icons.favorite_border,
+                        color: isFav ? Colors.red : Colors.grey,
+                      ),
+                      onPressed: () {
+                        context.read<CourseProvider>().toggleFavorite(course.code);
+                      },
+                    ),
+                  ),
                 );
-              },
-            ),
+              }),
+            ],
           ],
         ),
       ),
