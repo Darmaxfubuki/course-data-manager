@@ -16,22 +16,21 @@ class CourseExplorerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Course Explorer - Tahap 6',
+      title: 'Course Explorer - Tahap 7',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1E88E5)),
         useMaterial3: true,
       ),
-      // Membungkus home langsung dengan ChangeNotifierProvider memastikan context selalu valid
       home: ChangeNotifierProvider(
         create: (_) => CourseProvider(),
-        child: const ProviderSetupPage(),
+        child: const WatchReadConsumerDemoPage(),
       ),
     );
   }
 }
 
-class ProviderSetupPage extends StatelessWidget {
-  const ProviderSetupPage({super.key});
+class WatchReadConsumerDemoPage extends StatelessWidget {
+  const WatchReadConsumerDemoPage({super.key});
 
   final List<Map<String, String>> _courses = const [
     {'code': 'TI2101', 'title': 'State Management & Architecture'},
@@ -41,13 +40,13 @@ class ProviderSetupPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Membaca state CourseProvider dari context turunan
-    final courseProvider = context.watch<CourseProvider>();
+    // 1. Menggunakan context.watch() untuk mendengarkan perubahan state jumlah favorit
+    final int totalFavorites = context.watch<CourseProvider>().favoriteCount;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        title: const Text('Tahap 6: Provider Setup'),
+        title: const Text('Tahap 7: watch, read & Consumer'),
         backgroundColor: const Color(0xFF1E88E5),
         foregroundColor: Colors.white,
         centerTitle: true,
@@ -80,31 +79,27 @@ class ProviderSetupPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Indikator Status Provider
+            // Demo 1: Menampilkan jumlah favorit menggunakan context.watch()
             Card(
-              color: Colors.green.shade50,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: Colors.green.shade300),
-              ),
+              color: Colors.blue.shade50,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(14.0),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle, color: Colors.green, size: 30),
+                    const Icon(Icons.remove_red_eye, color: Color(0xFF1E88E5), size: 28),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Provider Berhasil Terpasang!',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.green),
+                            'Dibaca via context.watch()',
+                            style: TextStyle(fontSize: 12, color: Colors.blueGrey, fontWeight: FontWeight.bold),
                           ),
-                          const SizedBox(height: 2),
                           Text(
-                            'Total Favorit: ${courseProvider.favoriteCount} Kursus',
-                            style: TextStyle(fontSize: 12, color: Colors.green.shade900),
+                            'Total Favorit: $totalFavorites Kursus',
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -116,13 +111,13 @@ class ProviderSetupPage extends StatelessWidget {
             const SizedBox(height: 16),
 
             const Text(
-              'Akses Provider dari Widget Bawah',
+              'Daftar Topik Kursus (read & Consumer)',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
+
             ..._courses.map((course) {
               final String code = course['code']!;
-              final bool isFav = courseProvider.isFavorite(code);
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 8),
@@ -131,13 +126,20 @@ class ProviderSetupPage extends StatelessWidget {
                   leading: const Icon(Icons.school, color: Colors.blue),
                   title: Text(course['title']!, style: const TextStyle(fontWeight: FontWeight.w600)),
                   subtitle: Text(code),
-                  trailing: IconButton(
-                    icon: Icon(
-                      isFav ? Icons.favorite : Icons.favorite_border,
-                      color: isFav ? Colors.red : Colors.grey,
-                    ),
-                    onPressed: () {
-                      context.read<CourseProvider>().toggleFavorite(code);
+                  // 3. Menggunakan Consumer untuk membatasi rebuild hanya pada tombol ikon favorit
+                  trailing: Consumer<CourseProvider>(
+                    builder: (context, provider, child) {
+                      final bool isFav = provider.isFavorite(code);
+                      return IconButton(
+                        icon: Icon(
+                          isFav ? Icons.favorite : Icons.favorite_border,
+                          color: isFav ? Colors.red : Colors.grey,
+                        ),
+                        // 2. Menggunakan context.read() pada callback onPressed
+                        onPressed: () {
+                          context.read<CourseProvider>().toggleFavorite(code);
+                        },
+                      );
                     },
                   ),
                 ),
