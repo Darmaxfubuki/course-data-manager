@@ -9,7 +9,17 @@ const String studentName = 'I Ketut Darmawan Wirakusuma';
 const String studentId = '2415051021';
 
 void main() {
-  runApp(const CourseExplorerApp());
+  // Siapkan dependensi Service dan Repository
+  final courseService = CourseService();
+  final courseRepository = CourseRepository(courseService);
+
+  runApp(
+    // Bungkus MaterialApp dengan ChangeNotifierProvider agar SEMUA rute/halaman bisa mengakses Provider
+    ChangeNotifierProvider(
+      create: (_) => CourseProvider(courseRepository)..loadCourses(),
+      child: const CourseExplorerApp(),
+    ),
+  );
 }
 
 class CourseExplorerApp extends StatelessWidget {
@@ -17,9 +27,6 @@ class CourseExplorerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final courseService = CourseService();
-    final courseRepository = CourseRepository(courseService);
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Course Explorer v2',
@@ -27,12 +34,9 @@ class CourseExplorerApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1E88E5)),
         useMaterial3: true,
       ),
-      home: ChangeNotifierProvider(
-        create: (_) => CourseProvider(courseRepository)..loadCourses(),
-        child: const HomePage(
-          studentName: studentName,
-          studentId: studentId,
-        ),
+      home: const HomePage(
+        studentName: studentName,
+        studentId: studentId,
       ),
     );
   }

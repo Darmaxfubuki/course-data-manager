@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
 import 'course_detail_page.dart';
+import 'favorites_page.dart';
 
 class HomePage extends StatelessWidget {
   final String studentName;
@@ -25,6 +26,25 @@ class HomePage extends StatelessWidget {
         backgroundColor: const Color(0xFF1E88E5),
         foregroundColor: Colors.white,
         centerTitle: true,
+        actions: [
+          // 3. Tombol navigasi ke FavoritesPage dengan Badge jumlah
+          Badge(
+            label: Text('${provider.favoriteCount}'),
+            isLabelVisible: provider.favoriteCount > 0,
+            alignment: Alignment.topRight,
+            child: IconButton(
+              tooltip: 'Buka Kursus Favorit',
+              icon: const Icon(Icons.favorite),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const FavoritesPage()),
+                );
+              },
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
         child: ListView(
@@ -66,9 +86,19 @@ class HomePage extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Total Kursus Favorit: ${provider.favoriteCount}',
+                        'Total Kursus Favorit: ${provider.favoriteCount} Kursus',
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                       ),
+                    ),
+                    TextButton.icon(
+                      icon: const Icon(Icons.arrow_forward, size: 16),
+                      label: const Text('Lihat'),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const FavoritesPage()),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -77,7 +107,7 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 16),
 
             const Text(
-              'Daftar Kursus (Modular Architecture)',
+              'Daftar Kursus (Klik untuk Detail / Toggle)',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
