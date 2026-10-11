@@ -11,7 +11,9 @@ class CourseProvider extends ChangeNotifier {
   bool isLoading = false;
   String? error;
 
+  // Set menyimpan kode mata kuliah favorit (Single Source of Truth)
   final Set<String> _favorites = <String>{};
+
   Set<String> get favorites => Set.unmodifiable(_favorites);
   int get favoriteCount => _favorites.length;
   bool isFavorite(String code) => _favorites.contains(code);

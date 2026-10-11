@@ -9,12 +9,10 @@ const String studentName = 'I Ketut Darmawan Wirakusuma';
 const String studentId = '2415051021';
 
 void main() {
-  // Siapkan dependensi Service dan Repository
   final courseService = CourseService();
   final courseRepository = CourseRepository(courseService);
 
   runApp(
-    // Bungkus MaterialApp dengan ChangeNotifierProvider agar SEMUA rute/halaman bisa mengakses Provider
     ChangeNotifierProvider(
       create: (_) => CourseProvider(courseRepository)..loadCourses(),
       child: const CourseExplorerApp(),
@@ -31,7 +29,7 @@ class CourseExplorerApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Course Explorer v2',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1E88E5)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1976D2)),
         useMaterial3: true,
       ),
       home: const HomePage(
