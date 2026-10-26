@@ -9,4 +9,9 @@ class CourseRepository {
   Future<List<Course>> getCourses() {
     return service.getCourses();
   }
+
+  // Meneruskan request pembuatan course ke service layer (Tahap 6)
+  Future<Course> createCourse(Course course) {
+    return service.createCourse(course);
+  }
 }

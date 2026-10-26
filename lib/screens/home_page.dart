@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
 import '../widgets/error_view.dart';
+import 'add_course_page.dart';
 import 'course_detail_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -27,7 +28,7 @@ class _HomePageState extends State<HomePage> {
     final provider = context.watch<CourseProvider>();
     final isWide = MediaQuery.of(context).size.width >= 640;
 
-    // Filter daftar course sesuai navigasi tab (Favorites hanya menampilkan item yang di-favoritkan)
+    // Filter daftar course sesuai navigasi tab
     final displayCourses = _selectedIndex == 2
         ? provider.courses.where((c) => provider.isFavorite(c.code)).toList()
         : provider.courses;
@@ -126,7 +127,7 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 16),
 
-          // 3. Penanganan Empat State Asynchronous: Loading, Error, Empty, dan Success (Tahap 5)
+          // 3. Penanganan Empat State Asynchronous: Loading, Error, Empty, dan Success
           if (provider.isLoading) ...[
             // State: Loading
             const Center(
@@ -198,7 +199,19 @@ class _HomePageState extends State<HomePage> {
         centerTitle: false,
         elevation: 0,
       ),
-      // Responsive layout: Menyesuaikan tampilan desktop/tablet vs smartphone
+      // FloatingActionButton untuk membuka layar tambah data (Tahap 6)
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AddCoursePage()),
+          );
+        },
+        backgroundColor: const Color(0xFF1976D2),
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add),
+        label: const Text('Tambah Course'),
+      ),
       body: isWide
           ? Row(
               children: [
