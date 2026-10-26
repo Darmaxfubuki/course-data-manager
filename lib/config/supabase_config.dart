@@ -3,7 +3,7 @@
 
 class SupabaseConfig {
   // Ganti dengan Project URL dari dashboard Supabase Anda
-  static const String url = 'https://apykfxpumgnhcrjacrjz.supabase.co/rest/v1/';
+  static const String url = 'https://apykfxpumgnhcrjacrjz.supabase.co';
 
   // Ganti dengan Publishable/Anon Key (JANGAN gunakan service_role key)
   static const String anonKey = 'sb_publishable_NZlPnaEFsxkbNi2lG74v9w_bQPvOq1W';
