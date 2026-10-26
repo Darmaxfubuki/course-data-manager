@@ -5,8 +5,8 @@ import 'repositories/course_repository.dart';
 import 'screens/home_page.dart';
 import 'services/course_service.dart';
 
-const String studentName = '(I Ketut Darmawan Wirakusuma)'; 
-const String studentId = '(2415051021)'; 
+const String studentName = '(I Ketut Darmawan Wirakusuma)';  
+const String studentId = '(2415051021)';  
 
 void main() {
   final courseService = CourseService();
