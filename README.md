@@ -54,3 +54,21 @@ Arah dependensi yang diterapkan adalah satu arah:
 6. **`lib/widgets/`**
    - Komponen UI modular yang dapat digunakan kembali (*reusable widgets*), seperti `CourseCard`.
    - Menampilkan data dari model dan memicu aksi provider via `context.read()`.
+
+## Dokumentasi REST API Latihan (Tahap 1)
+- **Base URL:** `https://course-api-pearl.vercel.app`
+- **Endpoint:** `/courses`
+- **HTTP Method:** `GET`
+- **Status Code:** `200 OK`
+- **Resource:** `courses`
+- **Contoh Response JSON:**
+  ```json
+  [
+    {
+      "id": 1,
+      "code": "MOB01",
+      "title": "Git & GitHub",
+      "credits": 2,
+      "status": "active"
+    }
+  ]
