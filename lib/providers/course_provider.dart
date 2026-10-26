@@ -11,7 +11,6 @@ class CourseProvider extends ChangeNotifier {
   bool isLoading = false;
   String? error;
 
-  // Set menyimpan kode mata kuliah favorit
   final Set<String> _favorites = <String>{};
   Set<String> get favorites => Set.unmodifiable(_favorites);
   int get favoriteCount => _favorites.length;
@@ -41,28 +40,22 @@ class CourseProvider extends ChangeNotifier {
     }
   }
 
-  // Menambahkan data baru dan refresh list (Tahap 6)
   Future<void> createCourse(Course course) async {
     await repository.createCourse(course);
     await loadCourses();
   }
 
-  // Memperbarui data dan refresh list (Tahap 7)
   Future<void> updateCourse(int id, Course course) async {
     await repository.updateCourse(id, course);
     await loadCourses();
   }
 
-  // Menghapus data, membersihkan dari favorit, dan refresh list (Tahap 8)
   Future<void> deleteCourse(Course course) async {
     if (course.id != null) {
       await repository.deleteCourse(course.id!);
-      
-      // Hapus dari favorites jika ada agar tidak meninggalkan data yatim
       if (_favorites.contains(course.code)) {
         _favorites.remove(course.code);
       }
-      
       await loadCourses();
     }
   }

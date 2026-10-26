@@ -10,14 +10,12 @@ const String studentId = '2415051021';
 const String apiBaseUrl = 'https://course-api-pearl.vercel.app';
 
 void main() {
-  // Inisialisasi Service Layer dengan Base URL API latihan
-  final courseApiService = CourseApiService(apiBaseUrl);
-  // Inisialisasi Repository Layer
-  final courseRepository = CourseRepository(courseApiService);
+  final apiService = CourseApiService(apiBaseUrl);
+  final repository = CourseRepository(apiService);
 
   runApp(
     ChangeNotifierProvider(
-      create: (_) => CourseProvider(courseRepository)..loadCourses(),
+      create: (_) => CourseProvider(repository)..loadCourses(),
       child: const CourseExplorerApp(),
     ),
   );
