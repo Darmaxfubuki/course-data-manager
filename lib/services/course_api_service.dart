@@ -7,7 +7,7 @@ class CourseApiService {
 
   CourseApiService(this.baseUrl);
 
-  // Mengambil daftar seluruh course dari REST API (Tahap 4)
+  // Mengambil daftar seluruh course (Tahap 4)
   Future<List<Course>> getCourses() async {
     final response = await http.get(Uri.parse('$baseUrl/courses'));
 
@@ -48,6 +48,17 @@ class CourseApiService {
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('Gagal memperbarui course (HTTP ${response.statusCode})');
+    }
+  }
+
+  // Menghapus resource course via HTTP DELETE (Tahap 8)
+  Future<void> deleteCourse(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/courses/$id'),
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception('Gagal menghapus course (HTTP ${response.statusCode})');
     }
   }
 }

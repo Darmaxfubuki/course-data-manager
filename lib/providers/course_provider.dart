@@ -41,15 +41,29 @@ class CourseProvider extends ChangeNotifier {
     }
   }
 
-  // Menambahkan course baru dan me-refresh daftar data (Tahap 6)
+  // Menambahkan data baru dan refresh list (Tahap 6)
   Future<void> createCourse(Course course) async {
     await repository.createCourse(course);
     await loadCourses();
   }
 
-  // Memperbarui course dan me-refresh daftar data secara penuh (Tahap 7)
+  // Memperbarui data dan refresh list (Tahap 7)
   Future<void> updateCourse(int id, Course course) async {
     await repository.updateCourse(id, course);
     await loadCourses();
+  }
+
+  // Menghapus data, membersihkan dari favorit, dan refresh list (Tahap 8)
+  Future<void> deleteCourse(Course course) async {
+    if (course.id != null) {
+      await repository.deleteCourse(course.id!);
+      
+      // Hapus dari favorites jika ada agar tidak meninggalkan data yatim
+      if (_favorites.contains(course.code)) {
+        _favorites.remove(course.code);
+      }
+      
+      await loadCourses();
+    }
   }
 }

@@ -14,8 +14,12 @@ class CourseRepository {
     return service.createCourse(course);
   }
 
-  // Meneruskan request update course ke Service Layer (Tahap 7)
   Future<void> updateCourse(int id, Course course) {
     return service.updateCourse(id, course);
+  }
+
+  // Meneruskan request delete ke Service Layer (Tahap 8)
+  Future<void> deleteCourse(int id) {
+    return service.deleteCourse(id);
   }
 }
