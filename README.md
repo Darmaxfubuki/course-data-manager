@@ -72,3 +72,8 @@ Arah dependensi yang diterapkan adalah satu arah:
       "status": "active"
     }
   ]
+
+## Tahap 11 - Database Supabase
+- Pembuatan tabel `courses` dengan kolom `id`, `code`, `title`, `credits`, `status`, `description`, dan `created_at`.
+- Penerapan CHECK constraint pada status (`planned`, `active`, `done`).
+- Konfigurasi Row Level Security (RLS) dan penambahan data awal.
