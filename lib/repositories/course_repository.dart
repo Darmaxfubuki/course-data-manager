@@ -10,8 +10,12 @@ class CourseRepository {
     return service.getCourses();
   }
 
-  // Meneruskan request pembuatan course ke service layer (Tahap 6)
   Future<Course> createCourse(Course course) {
     return service.createCourse(course);
+  }
+
+  // Meneruskan request update course ke Service Layer (Tahap 7)
+  Future<void> updateCourse(int id, Course course) {
+    return service.updateCourse(id, course);
   }
 }

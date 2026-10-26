@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
+import 'edit_course_page.dart';
 
 class CourseDetailPage extends StatelessWidget {
   final Course course;
@@ -18,6 +19,21 @@ class CourseDetailPage extends StatelessWidget {
         title: Text(course.code),
         backgroundColor: const Color(0xFF1976D2),
         foregroundColor: Colors.white,
+        actions: [
+          // Tombol Edit untuk navigasi ke form edit (Tahap 7)
+          IconButton(
+            icon: const Icon(Icons.edit),
+            tooltip: 'Edit Course',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditCoursePage(course: course),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
