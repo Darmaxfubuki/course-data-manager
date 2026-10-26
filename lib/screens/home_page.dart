@@ -1,14 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
+import '../widgets/error_view.dart';
 import 'course_detail_page.dart';
-
-// 1. Konstanta endpoint API latihan
-const String apiUrl = 'https://course-api-pearl.vercel.app/courses';
 
 class HomePage extends StatefulWidget {
   final String studentName;
@@ -27,28 +22,12 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
-  // 2. Fungsi asynchronous HTTP GET yang mengembalikan List<Course> (Tahap 3)
-  Future<List<Course>> fetchCourses() async {
-    final response = await http.get(Uri.parse(apiUrl));
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
-      debugPrint('Berhasil memuat data. Jumlah item: ${data.length}');
-      // Konversi respon list JSON menjadi List<Course> bertipe data Course
-      return data
-          .map((item) => Course.fromJson(item as Map<String, dynamic>))
-          .toList();
-    }
-
-    throw Exception('HTTP ${response.statusCode}');
-  }
-
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CourseProvider>();
     final isWide = MediaQuery.of(context).size.width >= 640;
 
-    // Filter daftar lokal untuk tab Favorites
+    // Filter daftar course sesuai navigasi tab (Favorites hanya menampilkan item yang di-favoritkan)
     final displayCourses = _selectedIndex == 2
         ? provider.courses.where((c) => provider.isFavorite(c.code)).toList()
         : provider.courses;
@@ -57,7 +36,7 @@ class _HomePageState extends State<HomePage> {
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         children: [
-          // Identitas Mahasiswa (Wajib terlihat di bukti praktikum)
+          // 1. Identitas Mahasiswa (Nama & NIM)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
             decoration: BoxDecoration(
@@ -75,7 +54,7 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 14),
 
-          // Summary Card: Courses & Favorites
+          // 2. Summary Card: Courses & Favorites
           Row(
             children: [
               Expanded(
@@ -91,12 +70,20 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       const Text(
                         'Courses',
-                        style: TextStyle(fontSize: 13, color: Color(0xFF486581), fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF486581),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '${provider.courses.length}',
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF102A43)),
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF102A43),
+                        ),
                       ),
                     ],
                   ),
@@ -116,12 +103,20 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       const Text(
                         'Favorites',
-                        style: TextStyle(fontSize: 13, color: Color(0xFF486581), fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF486581),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '${provider.favoriteCount}',
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF102A43)),
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF102A43),
+                        ),
                       ),
                     ],
                   ),
@@ -131,141 +126,51 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 16),
 
-          // 3. Tampilan Hasil Deserialisasi Model Dart via FutureBuilder<List<Course>> (Tahap 3)
-          FutureBuilder<List<Course>>(
-            future: fetchCourses(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(24.0),
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              }
-
-              if (snapshot.hasError) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        Text(
-                          'Terjadi Error: ${snapshot.error}',
-                          style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        ElevatedButton(
-                          onPressed: () => setState(() {}),
-                          child: const Text('Coba Lagi'),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-
-              final courses = snapshot.data ?? [];
-              return Container(
-                padding: const EdgeInsets.all(14.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFBCCCDC)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Model Course Mapping Berhasil (${courses.length} Data Diterima)',
-                      style: TextStyle(
-                        color: Colors.green.shade700,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    // Menampilkan minimal 3 course lengkap dengan code, title, dan status (Syarat Butir 5 Tahap 3)
-                    ...courses.take(3).map((course) {
-                      final bool isActive = course.status.toLowerCase() == 'active';
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 8.0),
-                        padding: const EdgeInsets.all(10.0),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    course.title,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                      color: Color(0xFF102A43),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    '${course.code} • ${course.credits} SKS',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Color(0xFF627D98),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: isActive ? const Color(0xFFDEF7EC) : const Color(0xFFFEF08A),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                course.status,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: isActive ? const Color(0xFF03543F) : const Color(0xFF723B13),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-
-          // Tampilan daftar item lama/lokal dari Provider
+          // 3. Penanganan Empat State Asynchronous: Loading, Error, Empty, dan Success (Tahap 5)
           if (provider.isLoading) ...[
+            // State: Loading
             const Center(
               child: Padding(
-                padding: EdgeInsets.all(32.0),
+                padding: EdgeInsets.all(48.0),
                 child: CircularProgressIndicator(),
               ),
             ),
+          ] else if (provider.error != null) ...[
+            // State: Error
+            ErrorView(
+              message: provider.error!,
+              onRetry: () => context.read<CourseProvider>().loadCourses(),
+            ),
           ] else if (displayCourses.isEmpty) ...[
+            // State: Empty
             Center(
               child: Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Text(
-                  _selectedIndex == 2 ? 'Belum ada mata kuliah favorit.' : 'Data kosong.',
-                  style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+                padding: const EdgeInsets.all(48.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.inbox_outlined,
+                      size: 48,
+                      color: Color(0xFF9FB3C8),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _selectedIndex == 2
+                          ? 'Belum ada mata kuliah favorit.'
+                          : 'Data course belum tersedia.',
+                      style: const TextStyle(
+                        color: Color(0xFF627D98),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ] else ...[
+            // State: Success
             ...displayCourses.map((course) {
               return CourseCard(
                 course: course,
@@ -293,6 +198,7 @@ class _HomePageState extends State<HomePage> {
         centerTitle: false,
         elevation: 0,
       ),
+      // Responsive layout: Menyesuaikan tampilan desktop/tablet vs smartphone
       body: isWide
           ? Row(
               children: [
