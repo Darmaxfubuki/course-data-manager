@@ -2,11 +2,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
 import 'course_detail_page.dart';
 
-// 1. Konstanta endpoint API latihan (Tahap 2)
+// 1. Konstanta endpoint API latihan
 const String apiUrl = 'https://course-api-pearl.vercel.app/courses';
 
 class HomePage extends StatefulWidget {
@@ -26,14 +27,17 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
-  // 2. Fungsi asynchronous HTTP GET (Tahap 2)
-  Future<List<dynamic>> fetchCourses() async {
+  // 2. Fungsi asynchronous HTTP GET yang mengembalikan List<Course> (Tahap 3)
+  Future<List<Course>> fetchCourses() async {
     final response = await http.get(Uri.parse(apiUrl));
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
       debugPrint('Berhasil memuat data. Jumlah item: ${data.length}');
-      return data;
+      // Konversi respon list JSON menjadi List<Course> bertipe data Course
+      return data
+          .map((item) => Course.fromJson(item as Map<String, dynamic>))
+          .toList();
     }
 
     throw Exception('HTTP ${response.statusCode}');
@@ -127,8 +131,8 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 16),
 
-          // 3. Tampilan Hasil HTTP GET via FutureBuilder (Tahap 2)
-          FutureBuilder<List<dynamic>>(
+          // 3. Tampilan Hasil Deserialisasi Model Dart via FutureBuilder<List<Course>> (Tahap 3)
+          FutureBuilder<List<Course>>(
             future: fetchCourses(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -140,7 +144,6 @@ class _HomePageState extends State<HomePage> {
                 );
               }
 
-              // Kondisi saat simulasi endpoint salah (404)
               if (snapshot.hasError) {
                 return Center(
                   child: Padding(
@@ -162,9 +165,9 @@ class _HomePageState extends State<HomePage> {
                 );
               }
 
-              final items = snapshot.data ?? [];
+              final courses = snapshot.data ?? [];
               return Container(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.all(14.0),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
@@ -174,14 +177,69 @@ class _HomePageState extends State<HomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Status HTTP GET: Berhasil (200 OK)',
-                      style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.bold),
+                      'Model Course Mapping Berhasil (${courses.length} Data Diterima)',
+                      style: TextStyle(
+                        color: Colors.green.shade700,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Jumlah item diterima dari API: ${items.length} item',
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                    ),
+                    const SizedBox(height: 10),
+                    // Menampilkan minimal 3 course lengkap dengan code, title, dan status (Syarat Butir 5 Tahap 3)
+                    ...courses.take(3).map((course) {
+                      final bool isActive = course.status.toLowerCase() == 'active';
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8.0),
+                        padding: const EdgeInsets.all(10.0),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    course.title,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: Color(0xFF102A43),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '${course.code} • ${course.credits} SKS',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF627D98),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: isActive ? const Color(0xFFDEF7EC) : const Color(0xFFFEF08A),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                course.status,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: isActive ? const Color(0xFF03543F) : const Color(0xFF723B13),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
                   ],
                 ),
               );
@@ -189,7 +247,7 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 16),
 
-          // Tampilan daftar item
+          // Tampilan daftar item lama/lokal dari Provider
           if (provider.isLoading) ...[
             const Center(
               child: Padding(
