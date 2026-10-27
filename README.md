@@ -88,3 +88,61 @@ Aplikasi telah melalui pengujian ketahanan sistem dan penanganan eksepsi:
 - **Kasus E (Data Constraints)**: Memverifikasi penegakan *CHECK constraint* (kolom status) dan keunikan data di tingkat backend database saat menerima *payload* tidak valid.
 
 ---
+# Course Data Manager (Flutter & Supabase)
+
+Aplikasi mobile manajemen data mata kuliah (*Course Explorer v2*) berbasis Flutter yang menerapkan *Decoupled Architecture* (Model, DataSource, Repository, Provider, UI) dengan Supabase PostgreSQL sebagai backend cloud.
+
+## Identitas Mahasiswa
+- **Nama**: I Ketut Darmawan Wirakusuma
+- **NIM**: 2415051021
+- **Program Studi**: S1 Pendidikan Teknik Informatika
+- **Jurusan**: Teknik Informatika
+- **Fakultas**: Fakultas Teknik dan Kejuruan
+- **Institusi**: Universitas Pendidikan Ganesha
+
+---
+
+## Deskripsi Aplikasi & Fitur
+Course Data Manager dirancang untuk mengelola entitas mata kuliah secara terstruktur dan reaktif:
+1. **Full CRUD Operations**:
+   - **Create**: Penambahan mata kuliah melalui formulir tervalidasi.
+   - **Read**: Menampilkan daftar course dari tabel Supabase secara terurut.
+   - **Update**: Pembaruan judul, beban SKS, status, dan deskripsi course.
+   - **Delete**: Penghapusan data berbasis `id` yang diproteksi dialog konfirmasi.
+2. **State & UX Handling**:
+   - Indikator pemuatan (*Loading state*) saat komunikasi asinkron berlangsung.
+   - Tampilan data kosong (*Empty state*) jika tabel belum memiliki baris data.
+   - Penanganan galat (*Error state*) dengan tombol *Retry* interaktif.
+   - Umpan balik visual *SnackBar* pada setiap aksi berhasil maupun gagal.
+3. **Responsive Navigation & Favorites**:
+   - Navigasi responsif adaptif (`NavigationBar`).
+   - Sistem penandaan course favorit berbasis `code` yang konsisten di lintas layar.
+
+---
+
+## Arsitektur Aplikasi
+Aplikasi mengadopsi prinsip pemisahan tanggung jawab (*Separation of Concerns*):
+- **Model (`lib/models/`)**: Representasi entitas `Course` beserta serialisasi dan deserialisasi JSON.
+- **Service / DataSource (`lib/services/`)**: Kontrak antarmuka `CourseDataSource` dengan implementasi aktif `CourseSupabaseService` dan alternatif `CourseApiService` (REST).
+- **Repository (`lib/repositories/`)**: `CourseRepository` mengisolasi sumber data dari logika bisnis aplikasi.
+- **Provider (`lib/providers/`)**: `CourseProvider` mengelola *state* reaktif tanpa ketergantungan langsung pada paket HTTP atau Supabase.
+- **Screens & Widgets (`lib/screens/`, `lib/widgets/`)**: Lapisan antarmuka pengguna responsif tanpa kueri database langsung.
+
+---
+
+## Backend & Keamanan
+- **Backend**: Supabase (PostgreSQL Database, PostgREST API).
+- **Row Level Security (RLS)**: Ditegakkan di tingkat tabel PostgreSQL sebagai lapisan otorisasi utama.
+- **Data Integrity**: Memanfaatkan *CHECK constraint* pada kolom `status` (`'planned'`, `'active'`, `'done'`) serta integritas kunci primer.
+- **Audit Keamanan**:
+  - Hanya menggunakan `anonKey` (kunci publik) pada klien aplikasi.
+  - Bebas dari kebocoran `service_role` key, token privat, maupun file `.env`.
+  - Folder kompilasi `build/` diabaikan melalui konfigurasi `.gitignore`.
+
+---
+
+## Cara Menjalankan Proyek
+1. Pastikan Flutter SDK dan Dart telah terkonfigurasi pada sistem.
+2. Unduh pustaka dependensi:
+   ```bash
+   flutter pub get
