@@ -9,7 +9,8 @@ import 'config/supabase_config.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
 import 'screens/home_page.dart';
-import 'services/course_supabase_service.dart'; // Ganti import ke CourseSupabaseService
+import 'services/course_data_source.dart';
+import 'services/course_supabase_service.dart';
 
 const String studentName = 'I Ketut Darmawan Wirakusuma';
 const String studentId = '2415051021';
@@ -17,15 +18,15 @@ const String studentId = '2415051021';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inisialisasi Supabase Client
+  // Inisialisasi Supabase
   await Supabase.initialize(
     url: SupabaseConfig.url,
     anonKey: SupabaseConfig.anonKey,
   );
 
-  // Ganti sumber data ke Supabase cukup dengan mengubah satu baris instansiasi service
-  final supabaseService = CourseSupabaseService();
-  final repository = CourseRepository(supabaseService);
+  // Data source aktif: Supabase (cukup ganti baris ini jika ingin kembali ke REST)
+  final CourseDataSource dataSource = CourseSupabaseService();
+  final repository = CourseRepository(dataSource);
 
   runApp(
     ChangeNotifierProvider(

@@ -1,10 +1,14 @@
+// lib/screens/home_page.dart
+// Identitas: I Ketut Darmawan Wirakusuma - 2415051021
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/course.dart';
 import '../providers/course_provider.dart';
-import '../widgets/course_card.dart';
-import '../widgets/error_view.dart';
 import 'add_course_page.dart';
 import 'course_detail_page.dart';
+import 'edit_course_page.dart';
+import 'favorites_page.dart';
 
 class HomePage extends StatefulWidget {
   final String studentName;
@@ -21,226 +25,268 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
+  int _currentIndex = 0;
 
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<CourseProvider>();
-    final isWide = MediaQuery.of(context).size.width >= 640;
-
-    // Filter daftar course sesuai navigasi tab
-    final displayCourses = _selectedIndex == 2
-        ? provider.courses.where((c) => provider.isFavorite(c.code)).toList()
-        : provider.courses;
-
-    Widget bodyContent = SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-        children: [
-          // 1. Identitas Mahasiswa (Nama & NIM)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE8F1FA),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              '${widget.studentId} • ${widget.studentName}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-                color: Color(0xFF102A43),
-              ),
-            ),
+  Future<void> _confirmDelete(BuildContext context, Course course) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus Course?'),
+        content: Text('Hapus "${course.title}" dari database?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
           ),
-          const SizedBox(height: 14),
-
-          // 2. Summary Card: Courses & Favorites
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(14.0),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8F1FA),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFBCCCDC), width: 1.2),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Courses',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF486581),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${provider.courses.length}',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF102A43),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(14.0),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8F1FA),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFBCCCDC), width: 1.2),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Favorites',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF486581),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${provider.favoriteCount}',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF102A43),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Hapus'),
           ),
-          const SizedBox(height: 16),
-
-          // 3. Penanganan Empat State Asynchronous: Loading, Error, Empty, dan Success
-          if (provider.isLoading) ...[
-            // State: Loading
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(48.0),
-                child: CircularProgressIndicator(),
-              ),
-            ),
-          ] else if (provider.error != null) ...[
-            // State: Error
-            ErrorView(
-              message: provider.error!,
-              onRetry: () => context.read<CourseProvider>().loadCourses(),
-            ),
-          ] else if (displayCourses.isEmpty) ...[
-            // State: Empty
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(48.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.inbox_outlined,
-                      size: 48,
-                      color: Color(0xFF9FB3C8),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _selectedIndex == 2
-                          ? 'Belum ada mata kuliah favorit.'
-                          : 'Data course belum tersedia.',
-                      style: const TextStyle(
-                        color: Color(0xFF627D98),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ] else ...[
-            // State: Success
-            ...displayCourses.map((course) {
-              return CourseCard(
-                course: course,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CourseDetailPage(course: course),
-                    ),
-                  );
-                },
-              );
-            }),
-          ],
         ],
       ),
     );
 
+    if (confirm == true && context.mounted) {
+      try {
+        await context.read<CourseProvider>().deleteCourse(course);
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Course berhasil dihapus!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal menghapus: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<CourseProvider>();
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F4F8),
+      backgroundColor: const Color(0xFFF4F7FB),
       appBar: AppBar(
-        title: const Text('Course Data Manager'),
+        title: const Text(
+          'Course Data Manager',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: const Color(0xFF1976D2),
         foregroundColor: Colors.white,
-        centerTitle: false,
         elevation: 0,
       ),
-      // FloatingActionButton untuk membuka layar tambah data (Tahap 6)
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddCoursePage()),
-          );
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (idx) {
+          if (idx == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FavoritesPage()),
+            );
+          } else {
+            setState(() => _currentIndex = idx);
+          }
         },
-        backgroundColor: const Color(0xFF1976D2),
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('Tambah Course'),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.menu_book),
+            label: 'Courses',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.favorite),
+            label: 'Favorites',
+          ),
+        ],
       ),
-      body: isWide
-          ? Row(
-              children: [
-                NavigationRail(
-                  selectedIndex: _selectedIndex,
-                  onDestinationSelected: (index) => setState(() => _selectedIndex = index),
-                  labelType: NavigationRailLabelType.all,
-                  destinations: const [
-                    NavigationRailDestination(icon: Icon(Icons.home), label: Text('Home')),
-                    NavigationRailDestination(icon: Icon(Icons.menu_book), label: Text('Courses')),
-                    NavigationRailDestination(icon: Icon(Icons.favorite), label: Text('Favorites')),
+      body: RefreshIndicator(
+        onRefresh: () => provider.loadCourses(),
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          children: [
+            // 1. Kartu Identitas Mahasiswa
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEAF2FD),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '${widget.studentId} • ${widget.studentName}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF193B68),
+                  fontSize: 15,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // 2. Tombol Tambah Course
+            InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddCoursePage()),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E9),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFC8E6C9)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.add, color: Color(0xFF1B5E20), size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Tambah Course',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1B5E20),
+                        fontSize: 15,
+                      ),
+                    ),
                   ],
                 ),
-                const VerticalDivider(thickness: 1, width: 1),
-                Expanded(child: bodyContent),
-              ],
-            )
-          : bodyContent,
-      bottomNavigationBar: isWide
-          ? null
-          : NavigationBar(
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: (index) => setState(() => _selectedIndex = index),
-              destinations: const [
-                NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
-                NavigationDestination(icon: Icon(Icons.menu_book), label: 'Courses'),
-                NavigationDestination(icon: Icon(Icons.favorite), label: 'Favorites'),
-              ],
+              ),
             ),
+            const SizedBox(height: 16),
+
+            // 3. Status State: Loading, Error, Empty, dan List Course
+            if (provider.isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else if (provider.error != null)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.red.shade200),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Terjadi Kendala',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red.shade900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      provider.error!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      onPressed: () => provider.loadCourses(),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Coba Lagi (Retry)'),
+                    ),
+                  ],
+                ),
+              )
+            else if (provider.courses.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(32),
+                alignment: Alignment.center,
+                child: Column(
+                  children: [
+                    Icon(Icons.inbox_outlined, size: 48, color: Colors.grey.shade400),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Belum ada course di database.',
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              )
+            else
+              ...provider.courses.map((course) {
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFD6E4F0), width: 1.2),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CourseDetailPage(course: course),
+                        ),
+                      );
+                    },
+                    title: Text(
+                      course.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF103155),
+                        fontSize: 16,
+                      ),
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Text(
+                        '${course.code} • ${course.credits} SKS',
+                        style: TextStyle(
+                          color: Colors.blueGrey.shade600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit, size: 20, color: Color(0xFF1976D2)),
+                          tooltip: 'Edit Course',
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => EditCoursePage(course: course),
+                              ),
+                            );
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 20, color: Colors.redAccent),
+                          tooltip: 'Hapus Course',
+                          onPressed: () => _confirmDelete(context, course),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+          ],
+        ),
+      ),
     );
   }
 }

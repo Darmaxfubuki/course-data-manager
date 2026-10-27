@@ -57,7 +57,6 @@ class CourseSupabaseService implements CourseDataSource {
 
   @override
   Future<void> deleteCourse(int id) async {
-    // Menghapus baris data di Supabase berdasarkan primary key 'id'
     await supabase
         .from('courses')
         .delete()
