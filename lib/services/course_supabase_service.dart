@@ -22,7 +22,6 @@ class CourseSupabaseService implements CourseDataSource {
 
   @override
   Future<Course> createCourse(Course course) async {
-    // Siapkan payload tanpa menyertakan ID (id di-generate otomatis oleh database Supabase)
     final payload = {
       'code': course.code,
       'title': course.title,
@@ -41,7 +40,22 @@ class CourseSupabaseService implements CourseDataSource {
   }
 
   @override
-  Future<void> updateCourse(int id, Course course) => throw UnimplementedError();
+  Future<void> updateCourse(int id, Course course) async {
+    // Menyiapkan data yang akan diperbarui tanpa mengubah nilai kolom id
+    final payload = {
+      'code': course.code,
+      'title': course.title,
+      'credits': course.credits,
+      'status': course.status,
+      'description': course.description,
+    };
+
+    // Eksekusi query UPDATE berdasarkan id baris data
+    await supabase
+        .from('courses')
+        .update(payload)
+        .eq('id', id);
+  }
 
   @override
   Future<void> deleteCourse(int id) => throw UnimplementedError();
