@@ -1,3 +1,6 @@
+// lib/screens/course_detail_page.dart
+// Identitas: I Ketut Darmawan Wirakusuma - 2415051021
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/course.dart';
@@ -16,13 +19,15 @@ class CourseDetailPage extends StatefulWidget {
 class _CourseDetailPageState extends State<CourseDetailPage> {
   bool _isDeleting = false;
 
-  // Dialog konfirmasi sebelum menghapus (Tahap 8)
+  // Dialog konfirmasi sebelum menghapus (Tahap 15)
   Future<void> _confirmDelete(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Hapus Course?'),
-        content: Text('Apakah Anda yakin ingin menghapus "${widget.course.title}"? Tindakan ini tidak dapat dibatalkan.'),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus "${widget.course.title}"? Tindakan ini tidak dapat dibatalkan.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -42,14 +47,15 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
     setState(() => _isDeleting = true);
 
     try {
+      // Mengirim objek Course ke CourseProvider sesuai tipe parameter yang diminta
       await context.read<CourseProvider>().deleteCourse(widget.course);
 
-      // Periksa context.mounted sebelum menggunakan ScaffoldMessenger atau Navigator
+      // Pastikan context masih aktif setelah asynchronous call
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Course berhasil dihapus!'),
+          content: Text('Course berhasil dihapus dari database!'),
           backgroundColor: Colors.green,
         ),
       );
@@ -74,7 +80,8 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isFav = context.watch<CourseProvider>().isFavorite(widget.course.code);
+    final bool isFav =
+        context.watch<CourseProvider>().isFavorite(widget.course.code);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4F8),
@@ -83,7 +90,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
         backgroundColor: const Color(0xFF1976D2),
         foregroundColor: Colors.white,
         actions: [
-          // Tombol Edit (Tahap 7)
+          // Tombol Edit Course
           IconButton(
             icon: const Icon(Icons.edit),
             tooltip: 'Edit Course',
@@ -98,7 +105,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                     );
                   },
           ),
-          // Tombol Delete (Tahap 8)
+          // Tombol Hapus Course
           IconButton(
             icon: _isDeleting
                 ? const SizedBox(
@@ -132,14 +139,26 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                 children: [
                   Text(
                     widget.course.title,
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const Divider(height: 24),
-                  Text('Kode: ${widget.course.code}', style: const TextStyle(fontSize: 14)),
+                  Text(
+                    'Kode: ${widget.course.code}',
+                    style: const TextStyle(fontSize: 14),
+                  ),
                   const SizedBox(height: 6),
-                  Text('SKS: ${widget.course.credits} SKS', style: const TextStyle(fontSize: 14)),
+                  Text(
+                    'SKS: ${widget.course.credits} SKS',
+                    style: const TextStyle(fontSize: 14),
+                  ),
                   const SizedBox(height: 6),
-                  Text('Status: ${widget.course.status}', style: const TextStyle(fontSize: 14)),
+                  Text(
+                    'Status: ${widget.course.status}',
+                    style: const TextStyle(fontSize: 14),
+                  ),
                   const SizedBox(height: 12),
                   Text(
                     'Deskripsi:\n${widget.course.description ?? "Tidak ada deskripsi."}',
@@ -151,14 +170,24 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                     height: 46,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isFav ? Colors.red.shade600 : const Color(0xFF1976D2),
+                        backgroundColor: isFav
+                            ? Colors.red.shade600
+                            : const Color(0xFF1976D2),
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                      icon: Icon(isFav ? Icons.favorite : Icons.favorite_border),
-                      label: Text(isFav ? 'Hapus dari Favorit' : 'Tambah ke Favorit'),
+                      icon: Icon(
+                        isFav ? Icons.favorite : Icons.favorite_border,
+                      ),
+                      label: Text(
+                        isFav ? 'Hapus dari Favorit' : 'Tambah ke Favorit',
+                      ),
                       onPressed: () {
-                        context.read<CourseProvider>().toggleFavorite(widget.course.code);
+                        context
+                            .read<CourseProvider>()
+                            .toggleFavorite(widget.course.code);
                       },
                     ),
                   ),

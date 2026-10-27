@@ -41,7 +41,6 @@ class CourseSupabaseService implements CourseDataSource {
 
   @override
   Future<void> updateCourse(int id, Course course) async {
-    // Menyiapkan data yang akan diperbarui tanpa mengubah nilai kolom id
     final payload = {
       'code': course.code,
       'title': course.title,
@@ -50,7 +49,6 @@ class CourseSupabaseService implements CourseDataSource {
       'description': course.description,
     };
 
-    // Eksekusi query UPDATE berdasarkan id baris data
     await supabase
         .from('courses')
         .update(payload)
@@ -58,5 +56,11 @@ class CourseSupabaseService implements CourseDataSource {
   }
 
   @override
-  Future<void> deleteCourse(int id) => throw UnimplementedError();
+  Future<void> deleteCourse(int id) async {
+    // Menghapus baris data di Supabase berdasarkan primary key 'id'
+    await supabase
+        .from('courses')
+        .delete()
+        .eq('id', id);
+  }
 }
