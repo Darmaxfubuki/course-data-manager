@@ -1,3 +1,6 @@
+// lib/screens/add_course_page.dart
+// Identitas: I Ketut Darmawan Wirakusuma - 2415051021
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/course.dart';
@@ -15,6 +18,7 @@ class _AddCoursePageState extends State<AddCoursePage> {
   final _codeController = TextEditingController();
   final _titleController = TextEditingController();
   final _creditsController = TextEditingController();
+  final _descController = TextEditingController();
 
   String _selectedStatus = 'planned';
   bool _isSaving = false; // Flag proteksi agar tidak terjadi submit ganda
@@ -24,6 +28,7 @@ class _AddCoursePageState extends State<AddCoursePage> {
     _codeController.dispose();
     _titleController.dispose();
     _creditsController.dispose();
+    _descController.dispose();
     super.dispose();
   }
 
@@ -38,17 +43,19 @@ class _AddCoursePageState extends State<AddCoursePage> {
         title: _titleController.text.trim(),
         credits: int.parse(_creditsController.text.trim()),
         status: _selectedStatus,
+        description: _descController.text.trim().isEmpty
+            ? null
+            : _descController.text.trim(),
       );
 
-      // Mengirim data via Provider (Screen tidak memanggil HTTP langsung)
+      // Mengirim data via Provider (Screen tidak memanggil HTTP / Supabase langsung)
       await context.read<CourseProvider>().createCourse(newCourse);
 
-      // Pengecekan mounted sebelum mengakses context setelah proses asynchronous
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Course baru berhasil ditambahkan!'),
+          content: Text('Course baru berhasil ditambahkan ke database!'),
           backgroundColor: Colors.green,
         ),
       );
@@ -89,8 +96,9 @@ class _AddCoursePageState extends State<AddCoursePage> {
                 controller: _codeController,
                 decoration: const InputDecoration(
                   labelText: 'Kode Mata Kuliah (Code) *',
-                  hintText: 'Contoh: MOB07',
+                  hintText: 'Contoh: CS104',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.code),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
@@ -104,8 +112,9 @@ class _AddCoursePageState extends State<AddCoursePage> {
                 controller: _titleController,
                 decoration: const InputDecoration(
                   labelText: 'Judul Mata Kuliah (Title) *',
-                  hintText: 'Contoh: Pemrograman Flutter',
+                  hintText: 'Contoh: Mobile Programming Lanjut',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.book),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
@@ -122,6 +131,7 @@ class _AddCoursePageState extends State<AddCoursePage> {
                   labelText: 'Bobot SKS (Credits) *',
                   hintText: 'Contoh: 3',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.confirmation_number_outlined),
                 ),
                 validator: (val) {
                   if (val == null || val.trim().isEmpty) {
@@ -140,6 +150,7 @@ class _AddCoursePageState extends State<AddCoursePage> {
                 decoration: const InputDecoration(
                   labelText: 'Status Course *',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.flag_outlined),
                 ),
                 items: const [
                   DropdownMenuItem(value: 'planned', child: Text('Planned')),
@@ -152,9 +163,20 @@ class _AddCoursePageState extends State<AddCoursePage> {
                   }
                 },
               ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _descController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Deskripsi (Opsional)',
+                  hintText: 'Masukkan penjelasan singkat mengenai mata kuliah...',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.description_outlined),
+                ),
+              ),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: _isSaving ? null : _submitForm, // Nonaktifkan saat saving
+                onPressed: _isSaving ? null : _submitForm,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1976D2),
                   foregroundColor: Colors.white,

@@ -10,7 +10,6 @@ class CourseSupabaseService implements CourseDataSource {
 
   @override
   Future<List<Course>> getCourses() async {
-    // Membaca data dari tabel 'courses' dan diurutkan berdasarkan id
     final data = await supabase
         .from('courses')
         .select()
@@ -21,9 +20,25 @@ class CourseSupabaseService implements CourseDataSource {
         .toList();
   }
 
-  // Method di bawah ini disiapkan sementara agar kelas mematuhi kontrak CourseDataSource
   @override
-  Future<Course> createCourse(Course course) => throw UnimplementedError();
+  Future<Course> createCourse(Course course) async {
+    // Siapkan payload tanpa menyertakan ID (id di-generate otomatis oleh database Supabase)
+    final payload = {
+      'code': course.code,
+      'title': course.title,
+      'credits': course.credits,
+      'status': course.status,
+      'description': course.description,
+    };
+
+    final row = await supabase
+        .from('courses')
+        .insert(payload)
+        .select()
+        .single();
+
+    return Course.fromJson(row);
+  }
 
   @override
   Future<void> updateCourse(int id, Course course) => throw UnimplementedError();
