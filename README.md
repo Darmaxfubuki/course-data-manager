@@ -77,3 +77,14 @@ Arah dependensi yang diterapkan adalah satu arah:
 - Pembuatan tabel `courses` dengan kolom `id`, `code`, `title`, `credits`, `status`, `description`, dan `created_at`.
 - Penerapan CHECK constraint pada status (`planned`, `active`, `done`).
 - Konfigurasi Row Level Security (RLS) dan penambahan data awal.
+
+## Verifikasi Pengujian & Debugging (Tahap 17)
+
+Aplikasi telah melalui pengujian ketahanan sistem dan penanganan eksepsi:
+- **Kasus A (Endpoint Invalid / 404)**: Menguji kueri ke tabel yang tidak terdaftar; aplikasi menangkap galat `PGRST205` dan menampilkan *error view* dengan tombol pemulihan.
+- **Kasus B (Network Failure)**: Menguji aplikasi saat koneksi internet terputus; *state loading* berhenti normal dan pesan kegagalan soket ditampilkan tanpa *force close*.
+- **Kasus C (JSON Mapping Error)**: Menguji ketidakcocokan *key* deserialisasi; sistem menangkap *type cast exception* secara aman.
+- **Kasus D (Supabase RLS & Permissions)**: Menguji proteksi hak akses otentikasi dan kebijakan Row Level Security pada tabel PostgreSQL.
+- **Kasus E (Data Constraints)**: Memverifikasi penegakan *CHECK constraint* (kolom status) dan keunikan data di tingkat backend database saat menerima *payload* tidak valid.
+
+---
