@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/course.dart';
+import '../pages/login_page.dart';
 import '../providers/course_provider.dart';
 import '../services/auth_service.dart';
 import 'add_course_page.dart';
@@ -84,6 +85,20 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: const Color(0xFF1976D2),
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            tooltip: 'Logout',
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await AuthService.instance.logout();
+              if (!context.mounted) return;
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
