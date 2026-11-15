@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/course.dart';
 import '../pages/login_page.dart';
 import '../providers/course_provider.dart';
@@ -60,14 +61,23 @@ class _HomePageState extends State<HomePage> {
 
     if (confirm == true && context.mounted) {
       try {
-        await context.read<CourseProvider>().deleteCourse(course);
+        final success = await context.read<CourseProvider>().deleteCourse(course);
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Course berhasil dihapus!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Course berhasil dihapus!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Gagal menghapus: Akses ditolak oleh RLS (bukan pemilik data).'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
       } catch (e) {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -342,12 +352,19 @@ class _HomePageState extends State<HomePage> {
                   )
                 else
                   ...provider.courses.map((course) {
+                    final myId = AuthService.instance.currentUser?.id;
+                    final isMine = course.ownerId != null && course.ownerId == myId;
+                    final canManage = (isMine && (role == 'owner' || role == 'admin')) || role == 'admin';
+
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFD6E4F0), width: 1.2),
+                        border: Border.all(
+                          color: isMine ? const Color(0xFF90CAF9) : const Color(0xFFD6E4F0),
+                          width: isMine ? 1.5 : 1.2,
+                        ),
                       ),
                       child: ListTile(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -359,13 +376,36 @@ class _HomePageState extends State<HomePage> {
                             ),
                           );
                         },
-                        title: Text(
-                          course.title,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF103155),
-                            fontSize: 16,
-                          ),
+                        title: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                course.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF103155),
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            if (isMine)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade50,
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: Colors.green.shade200),
+                                ),
+                                child: Text(
+                                  'Milik Anda',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green.shade800,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                         subtitle: Padding(
                           padding: const EdgeInsets.only(top: 4.0),
@@ -377,32 +417,30 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                         ),
-                        trailing: RoleGuard(
-                          role: role,
-                          allowed: const ['owner', 'admin'],
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit, size: 20, color: Color(0xFF1976D2)),
-                                tooltip: 'Edit Course',
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => EditCoursePage(course: course),
-                                    ),
-                                  );
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.close, size: 20, color: Colors.redAccent),
-                                tooltip: 'Hapus Course',
-                                onPressed: () => _confirmDelete(context, course),
-                              ),
-                            ],
-                          ),
-                        ),
+                        trailing: canManage
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit, size: 20, color: Color(0xFF1976D2)),
+                                    tooltip: 'Edit Course',
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => EditCoursePage(course: course),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.close, size: 20, color: Colors.redAccent),
+                                    tooltip: 'Hapus Course',
+                                    onPressed: () => _confirmDelete(context, course),
+                                  ),
+                                ],
+                              )
+                            : null,
                       ),
                     );
                   }),

@@ -45,18 +45,21 @@ class CourseProvider extends ChangeNotifier {
     await loadCourses();
   }
 
-  Future<void> updateCourse(int id, Course course) async {
-    await repository.updateCourse(id, course);
+  Future<bool> updateCourse(int id, Course course) async {
+    final success = await repository.updateCourse(id, course);
     await loadCourses();
+    return success;
   }
 
-  Future<void> deleteCourse(Course course) async {
+  Future<bool> deleteCourse(Course course) async {
     if (course.id != null) {
-      await repository.deleteCourse(course.id!);
+      final success = await repository.deleteCourse(course.id!);
       if (_favorites.contains(course.code)) {
         _favorites.remove(course.code);
       }
       await loadCourses();
+      return success;
     }
+    return false;
   }
 }

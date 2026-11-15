@@ -65,19 +65,27 @@ class _EditCoursePageState extends State<EditCoursePage> {
       );
 
       // Teruskan pemanggilan melalui CourseProvider
-      await context.read<CourseProvider>().updateCourse(widget.course.id!, updatedCourse);
+      final success = await context.read<CourseProvider>().updateCourse(widget.course.id!, updatedCourse);
 
       // Pengecekan mounted sebelum menggunakan context
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Course berhasil diperbarui!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      Navigator.pop(context);
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Course berhasil diperbarui!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gagal memperbarui: Akses ditolak oleh RLS (bukan pemilik data).'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
 

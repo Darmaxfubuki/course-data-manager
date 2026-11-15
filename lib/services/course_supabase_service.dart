@@ -22,12 +22,14 @@ class CourseSupabaseService implements CourseDataSource {
 
   @override
   Future<Course> createCourse(Course course) async {
+    final uid = supabase.auth.currentUser?.id;
     final payload = {
       'code': course.code,
       'title': course.title,
       'credits': course.credits,
       'status': course.status,
       'description': course.description,
+      if (uid != null) 'owner_id': uid,
     };
 
     final row = await supabase
@@ -40,7 +42,7 @@ class CourseSupabaseService implements CourseDataSource {
   }
 
   @override
-  Future<void> updateCourse(int id, Course course) async {
+  Future<bool> updateCourse(int id, Course course) async {
     final payload = {
       'code': course.code,
       'title': course.title,
@@ -49,17 +51,23 @@ class CourseSupabaseService implements CourseDataSource {
       'description': course.description,
     };
 
-    await supabase
+    final rows = await supabase
         .from('courses')
         .update(payload)
-        .eq('id', id);
+        .eq('id', id)
+        .select();
+
+    return (rows as List).isNotEmpty;
   }
 
   @override
-  Future<void> deleteCourse(int id) async {
-    await supabase
+  Future<bool> deleteCourse(int id) async {
+    final rows = await supabase
         .from('courses')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .select();
+
+    return (rows as List).isNotEmpty;
   }
 }
