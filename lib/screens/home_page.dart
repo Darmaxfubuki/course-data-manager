@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
+import '../services/auth_service.dart';
 import 'add_course_page.dart';
 import 'course_detail_page.dart';
 import 'edit_course_page.dart';
@@ -16,8 +17,8 @@ class HomePage extends StatefulWidget {
 
   const HomePage({
     super.key,
-    required this.studentName,
-    required this.studentId,
+    this.studentName = 'I Ketut Darmawan Wirakusuma',
+    this.studentId = '2415051021',
   });
 
   @override
@@ -112,20 +113,42 @@ class _HomePageState extends State<HomePage> {
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           children: [
-            // 1. Kartu Identitas Mahasiswa
+            // 1. Kartu Identitas Mahasiswa & Akun Pengguna
             Container(
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
               decoration: BoxDecoration(
                 color: const Color(0xFFEAF2FD),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Text(
-                '${widget.studentId} • ${widget.studentName}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF193B68),
-                  fontSize: 15,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${widget.studentId} • ${widget.studentName}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF193B68),
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(Icons.account_circle, size: 16, color: Color(0xFF1976D2)),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Login sebagai: ${AuthService.instance.currentUser?.email ?? '-'}',
+                          style: TextStyle(
+                            color: Colors.blueGrey.shade800,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 12),

@@ -6,9 +6,9 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/supabase_config.dart';
+import 'pages/login_page.dart';
 import 'providers/course_provider.dart';
 import 'repositories/course_repository.dart';
-import 'screens/home_page.dart';
 import 'services/course_data_source.dart';
 import 'services/course_supabase_service.dart';
 
@@ -48,10 +48,7 @@ class CourseExplorerApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1976D2)),
         useMaterial3: true,
       ),
-      home: const HomePage(
-        studentName: studentName,
-        studentId: studentId,
-      ),
+      home: const LoginPage(),
     );
   }
 }
