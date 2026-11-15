@@ -7,6 +7,7 @@ import '../models/course.dart';
 import '../pages/login_page.dart';
 import '../providers/course_provider.dart';
 import '../services/auth_service.dart';
+import '../services/profile_service.dart';
 import 'add_course_page.dart';
 import 'course_detail_page.dart';
 import 'edit_course_page.dart';
@@ -28,6 +29,13 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
+  late Future<UserProfile?> _profileFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _profileFuture = ProfileService().getMyProfile();
+  }
 
   Future<void> _confirmDelete(BuildContext context, Course course) async {
     final confirm = await showDialog<bool>(
@@ -124,47 +132,112 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => provider.loadCourses(),
+        onRefresh: () async {
+          setState(() {
+            _profileFuture = ProfileService().getMyProfile();
+          });
+          await provider.loadCourses();
+        },
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           children: [
-            // 1. Kartu Identitas Mahasiswa & Akun Pengguna
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEAF2FD),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${widget.studentId} • ${widget.studentName}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF193B68),
-                      fontSize: 15,
-                    ),
+            // 1. Kartu Identitas & Profil Pengguna (Nama, Email, Role)
+            FutureBuilder<UserProfile?>(
+              future: _profileFuture,
+              builder: (context, snap) {
+                final profile = snap.data;
+                final user = AuthService.instance.currentUser;
+                final displayName = (profile?.name.isNotEmpty == true)
+                    ? profile!.name
+                    : widget.studentName;
+                final email = (profile?.email.isNotEmpty == true)
+                    ? profile!.email
+                    : (user?.email ?? '-');
+                final role = profile?.role ?? 'seeker';
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAF2FD),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFBBDEFB)),
                   ),
-                  const SizedBox(height: 6),
-                  Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.account_circle, size: 16, color: Color(0xFF1976D2)),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          'Login sebagai: ${AuthService.instance.currentUser?.email ?? '-'}',
-                          style: TextStyle(
-                            color: Colors.blueGrey.shade800,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                      Row(
+                        children: [
+                          const Icon(Icons.person, size: 20, color: Color(0xFF1976D2)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              displayName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF193B68),
+                                fontSize: 16,
+                              ),
+                            ),
                           ),
-                        ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: role == 'owner'
+                                  ? Colors.orange.shade100
+                                  : (role == 'admin'
+                                      ? Colors.purple.shade100
+                                      : Colors.blue.shade100),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              role.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: role == 'owner'
+                                    ? Colors.orange.shade900
+                                    : (role == 'admin'
+                                        ? Colors.purple.shade900
+                                        : Colors.blue.shade900),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          const Icon(Icons.email, size: 16, color: Color(0xFF1976D2)),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              email,
+                              style: TextStyle(
+                                color: Colors.blueGrey.shade800,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.badge, size: 16, color: Color(0xFF1976D2)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'NIM / ID: ${widget.studentId}',
+                            style: TextStyle(
+                              color: Colors.blueGrey.shade600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
             const SizedBox(height: 12),
 
