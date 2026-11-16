@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "927434911265",
+    "project_id": "course-data-manager-e95c3",
+    "storage_bucket": "course-data-manager-e95c3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:927434911265:android:608376ce7435cb3ba83d60",
+        "android_client_info": {
+          "package_name": "com.example.flutter_ui_fundamentals"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDvn2AsTwKeo5KoWCjW5j_nkrH3LiUfbJI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

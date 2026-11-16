@@ -1,12 +1,14 @@
 // lib/main.dart
 // Identitas: I Ketut Darmawan Wirakusuma - 2415051021
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app_keys.dart';
 import 'config/supabase_config.dart';
+import 'firebase_options.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'providers/course_provider.dart';
@@ -20,6 +22,11 @@ const String studentId = '2415051021';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Inisialisasi Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   // Inisialisasi Supabase
   await Supabase.initialize(
