@@ -10,8 +10,8 @@
 //
 // See https://firebase.google.com/docs/cloud-messaging/flutter/receive#web
 
-importScripts('https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/12.19.0/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/11.9.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/11.9.1/firebase-messaging-compat.js');
 
 firebase.initializeApp({
   "apiKey": "AIzaSyAPZzJCZCbaaIQK80pLOyB_vUEmr_j450Y",

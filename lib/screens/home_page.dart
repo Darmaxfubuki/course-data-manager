@@ -2,12 +2,14 @@
 // Identitas: I Ketut Darmawan Wirakusuma - 2415051021
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/course.dart';
 import '../pages/login_page.dart';
 import '../providers/course_provider.dart';
 import '../services/auth_service.dart';
+import '../services/notification_service.dart';
 import '../services/profile_service.dart';
 import '../widgets/role_guard.dart';
 import 'add_course_page.dart';
@@ -32,11 +34,24 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
   late Future<UserProfile?> _profileFuture;
+  String? _fcmToken;
+  String _notificationStatus = 'notDetermined';
 
   @override
   void initState() {
     super.initState();
     _profileFuture = ProfileService().getMyProfile();
+    _checkNotificationAndToken();
+  }
+
+  Future<void> _checkNotificationAndToken() async {
+    final token = await NotificationService.instance.initAndGetToken();
+    if (mounted) {
+      setState(() {
+        _fcmToken = token;
+        _notificationStatus = NotificationService.instance.permissionStatus;
+      });
+    }
   }
 
   Future<void> _confirmDelete(BuildContext context, Course course) async {
@@ -122,6 +137,7 @@ class _HomePageState extends State<HomePage> {
                 tooltip: 'Logout',
                 icon: const Icon(Icons.logout),
                 onPressed: () async {
+                  await NotificationService.instance.removeCurrentToken();
                   await AuthService.instance.logout();
                   if (!context.mounted) return;
                   Navigator.of(context).pushAndRemoveUntil(
@@ -160,12 +176,13 @@ class _HomePageState extends State<HomePage> {
               setState(() {
                 _profileFuture = ProfileService().getMyProfile();
               });
+              _checkNotificationAndToken();
               await provider.loadCourses();
             },
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               children: [
-                // 1. Kartu Identitas & Profil Pengguna (Nama, Email, Role)
+                // 1. Kartu Identitas & Profil Pengguna (Nama, Email, Role, FCM Token)
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                   decoration: BoxDecoration(
@@ -244,6 +261,117 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                         ],
+                      ),
+                      const Divider(height: 16),
+                      Row(
+                        children: [
+                          const Icon(Icons.notifications_active, size: 16, color: Color(0xFF1976D2)),
+                          const SizedBox(width: 6),
+                          const Text(
+                            'Status Izin:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF193B68),
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: _notificationStatus == 'authorized'
+                                  ? Colors.green.shade50
+                                  : Colors.orange.shade50,
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: _notificationStatus == 'authorized'
+                                    ? Colors.green.shade300
+                                    : Colors.orange.shade300,
+                              ),
+                            ),
+                            child: Text(
+                              _notificationStatus,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: _notificationStatus == 'authorized'
+                                    ? Colors.green.shade900
+                                    : Colors.orange.shade900,
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            icon: const Icon(Icons.refresh, size: 16, color: Color(0xFF1976D2)),
+                            tooltip: 'Cek Ulang Izin & Token',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () async {
+                              await _checkNotificationAndToken();
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Status Notifikasi: $_notificationStatus'),
+                                    duration: const Duration(seconds: 1),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          if (_fcmToken != null)
+                            IconButton(
+                              icon: const Icon(Icons.copy, size: 16, color: Color(0xFF1976D2)),
+                              tooltip: 'Salin Token FCM',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: () {
+                                Clipboard.setData(ClipboardData(text: _fcmToken!));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('FCM Token berhasil disalin ke clipboard!'),
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+                              },
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          const Text(
+                            'FCM Token:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF193B68),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFBBDEFB)),
+                        ),
+                        child: SelectableText(
+                          _fcmToken ??
+                              (NotificationService.instance.tokenError ??
+                                  'Memuat token perangkat (atau periksa debug console)...'),
+                          style: TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 10,
+                            color: _fcmToken != null
+                                ? Colors.blueGrey.shade900
+                                : Colors.red.shade700,
+                          ),
+                          maxLines: 3,
+                        ),
                       ),
                     ],
                   ),
